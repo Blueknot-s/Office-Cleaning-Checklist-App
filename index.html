@@ -16,6 +16,7 @@
     .controls { margin-top: 15px; }
     .progress-bar { margin-top: 10px; font-weight: bold; }
     .btn-copy { margin-left: 10px; }
+    #saved-logs { margin-top: 30px; padding: 10px; background: #e6f2ff; white-space: pre-wrap; }
   </style>
 </head>
 <body>
@@ -25,6 +26,7 @@
   <div>
     <button onclick="addRow()">항목 추가</button>
     <button onclick="generateReport()">주간/월간 리포트</button>
+    <button onclick="saveLog()">기록 저장</button>
   </div>
 
   <table id="checklist">
@@ -62,6 +64,7 @@
   </div>
 
   <div id="report-output" style="margin-top: 20px; white-space: pre-wrap; background: #f4f4f4; padding: 10px;"></div>
+  <div id="saved-logs"></div>
 
   <script>
     document.getElementById('today').textContent = new Date().toLocaleDateString();
@@ -120,8 +123,26 @@
       document.getElementById('report-output').textContent = report.join('\n');
     }
 
+    function saveLog() {
+      const date = new Date().toLocaleString();
+      const reportText = document.getElementById('report-output').textContent;
+      const log = `📌 [${date} 기준 기록]\n${reportText}\n------------------------------\n`;
+      let logs = localStorage.getItem('checklistLogs') || '';
+      logs = log + logs;
+      localStorage.setItem('checklistLogs', logs);
+      document.getElementById('saved-logs').textContent = logs;
+    }
+
+    function loadLogs() {
+      const logs = localStorage.getItem('checklistLogs');
+      if (logs) {
+        document.getElementById('saved-logs').textContent = logs;
+      }
+    }
+
     document.addEventListener('change', updateProgress);
     updateProgress();
+    loadLogs();
   </script>
 </body>
 </html>
