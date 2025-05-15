@@ -17,6 +17,7 @@
     .progress-bar { margin-top: 10px; font-weight: bold; }
     .btn-copy { margin-left: 10px; }
     #saved-logs { margin-top: 30px; padding: 10px; background: #e6f2ff; white-space: pre-wrap; }
+    #log-filter { margin-top: 10px; }
   </style>
 </head>
 <body>
@@ -25,8 +26,17 @@
 
   <div>
     <button onclick="addRow()">항목 추가</button>
-    <button onclick="generateReport()">주간/월간 리포트</button>
+    <button onclick="generateReport()">리포트 생성</button>
     <button onclick="saveLog()">기록 저장</button>
+  </div>
+
+  <div id="log-filter">
+    <label for="logPeriod">리포트 보기:</label>
+    <select id="logPeriod" onchange="filterLogs()">
+      <option value="all">전체</option>
+      <option value="week">최근 7일</option>
+      <option value="month">최근 30일</option>
+    </select>
   </div>
 
   <table id="checklist">
@@ -107,8 +117,9 @@
     }
 
     function generateReport() {
+      const date = new Date().toLocaleString();
       const rows = document.querySelectorAll('#checklist-body tr');
-      const report = [];
+      const report = [`📅 리포트 생성 시각: ${date}\n`];
       rows.forEach(row => {
         const 층 = row.cells[0].querySelector('input')?.value || '';
         const 구역 = row.cells[1].querySelector('input')?.value || '';
@@ -124,20 +135,39 @@
     }
 
     function saveLog() {
-      const date = new Date().toLocaleString();
+      const now = new Date();
+      const dateKey = now.toISOString();
       const reportText = document.getElementById('report-output').textContent;
-      const log = `📌 [${date} 기준 기록]\n${reportText}\n------------------------------\n`;
-      let logs = localStorage.getItem('checklistLogs') || '';
-      logs = log + logs;
-      localStorage.setItem('checklistLogs', logs);
-      document.getElementById('saved-logs').textContent = logs;
+      const logs = JSON.parse(localStorage.getItem('checklistLogs') || '{}');
+      logs[dateKey] = reportText;
+      localStorage.setItem('checklistLogs', JSON.stringify(logs));
+      loadLogs();
     }
 
     function loadLogs() {
-      const logs = localStorage.getItem('checklistLogs');
-      if (logs) {
-        document.getElementById('saved-logs').textContent = logs;
-      }
+      const logs = JSON.parse(localStorage.getItem('checklistLogs') || '{}');
+      const container = document.getElementById('saved-logs');
+      const period = document.getElementById('logPeriod')?.value || 'all';
+      const now = new Date();
+      const output = [];
+
+      Object.entries(logs).forEach(([dateKey, content]) => {
+        const logDate = new Date(dateKey);
+        const diffDays = (now - logDate) / (1000 * 60 * 60 * 24);
+        if (
+          period === 'all' ||
+          (period === 'week' && diffDays <= 7) ||
+          (period === 'month' && diffDays <= 30)
+        ) {
+          output.push(`📌 [${logDate.toLocaleString()} 기록]\n${content}\n------------------------------\n`);
+        }
+      });
+
+      container.textContent = output.join('\n');
+    }
+
+    function filterLogs() {
+      loadLogs();
     }
 
     document.addEventListener('change', updateProgress);
