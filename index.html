@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>회사 미화직 청소 체크리스트</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body { font-family: sans-serif; padding: 20px; background: #f8f8f8; }
+    h2 { color: #333; }
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; background: white; }
+    th, td { border: 1px solid #ccc; padding: 10px; text-align: center; }
+    th { background-color: #efefef; }
+    input[type="text"], select { width: 95%; padding: 5px; }
+    input[type="checkbox"] { transform: scale(1.2); }
+    .highlight { background-color: #ffe0e0 !important; }
+    .controls { margin-top: 15px; }
+    .progress-bar { margin-top: 10px; font-weight: bold; }
+    .btn-copy { margin-left: 10px; }
+  </style>
+</head>
+<body>
+  <h2>회사 미화직 청소 체크리스트</h2>
+  <p><strong>오늘 날짜:</strong> <span id="today"></span></p>
+
+  <div>
+    <button onclick="addRow()">항목 추가</button>
+    <button onclick="generateReport()">주간/월간 리포트</button>
+  </div>
+
+  <table id="checklist">
+    <thead>
+      <tr>
+        <th>대분류 (층)</th>
+        <th>소분류 (구역)</th>
+        <th>소소분류 (항목)</th>
+        <th>주기</th>
+        <th>완료</th>
+        <th>점검필요</th>
+        <th>담당자</th>
+      </tr>
+    </thead>
+    <tbody id="checklist-body">
+      <tr>
+        <td><select><option>1층</option><option>2층</option><option>3층</option></select></td>
+        <td><select><option>화장실</option><option>사무실</option><option>회의실</option><option>공용공간</option></select></td>
+        <td><input type="text" placeholder="예: 변기"></td>
+        <td><select><option>일간</option><option>주간</option><option>월간</option></select></td>
+        <td><input type="checkbox" class="done"></td>
+        <td><input type="checkbox"></td>
+        <td><input type="text" class="signer"></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="controls">
+    <button onclick="resetChecklist()">초기화</button>
+    <button onclick="window.print()">PDF 출력</button>
+    <button onclick="copyChecklist()" class="btn-copy">복사</button>
+    <div class="progress-bar">진행률: <span id="progress">0%</span></div>
+  </div>
+
+  <div id="report-output" style="margin-top: 20px; white-space: pre-wrap; background: #f4f4f4; padding: 10px;"></div>
+
+  <script>
+    document.getElementById('today').textContent = new Date().toLocaleDateString();
+
+    function updateProgress() {
+      const checks = document.querySelectorAll('.done');
+      const total = checks.length;
+      const done = [...checks].filter(cb => cb.checked).length;
+      const percent = total ? Math.round((done / total) * 100) : 0;
+      document.getElementById('progress').textContent = percent + '%';
+    }
+
+    function addRow() {
+      const tbody = document.getElementById('checklist-body');
+      const row = document.createElement('tr');
+      row.innerHTML = `
+        <td><select><option>1층</option><option>2층</option><option>3층</option></select></td>
+        <td><select><option>화장실</option><option>사무실</option><option>회의실</option><option>공용공간</option></select></td>
+        <td><input type="text" placeholder="예: 바닥"></td>
+        <td><select><option>일간</option><option>주간</option><option>월간</option></select></td>
+        <td><input type="checkbox" class="done"></td>
+        <td><input type="checkbox"></td>
+        <td><input type="text" class="signer"></td>
+      `;
+      tbody.appendChild(row);
+      row.querySelectorAll('.done').forEach(cb => cb.addEventListener('change', updateProgress));
+    }
+
+    function resetChecklist() {
+      document.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
+      document.querySelectorAll('.signer').forEach(input => input.value = '');
+      updateProgress();
+    }
+
+    function copyChecklist() {
+      const checklist = document.getElementById('checklist-body');
+      const text = checklist.innerText;
+      navigator.clipboard.writeText(text).then(() => alert('체크리스트가 복사되었습니다.'));
+    }
+
+    function generateReport() {
+      const rows = document.querySelectorAll('#checklist-body tr');
+      const report = [];
+      rows.forEach(row => {
+        const 층 = row.cells[0].querySelector('select')?.value || '';
+        const 구역 = row.cells[1].querySelector('select')?.value || '';
+        const 항목 = row.cells[2].querySelector('input')?.value || '';
+        const 주기 = row.cells[3].querySelector('select')?.value || '';
+        const 완료 = row.cells[4].querySelector('input')?.checked ? '완료' : '미완료';
+        const 점검 = row.cells[5].querySelector('input')?.checked ? '점검필요' : '';
+        const 담당자 = row.cells[6].querySelector('input')?.value || '';
+        report.push(`${주기} | ${층} - ${구역} - ${항목} | 상태: ${완료}${점검 ? ', ' + 점검 : ''} | 담당자: ${담당자}`);
+      });
+      document.getElementById('report-output').textContent = report.join('\n');
+    }
+
+    document.addEventListener('change', updateProgress);
+    updateProgress();
+  </script>
+</body>
+</html>
