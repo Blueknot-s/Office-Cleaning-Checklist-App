@@ -30,24 +30,26 @@
   <table id="checklist">
     <thead>
       <tr>
-        <th>대분류 (층)</th>
-        <th>소분류 (구역)</th>
-        <th>소소분류 (항목)</th>
+        <th>층</th>
+        <th>구역</th>
+        <th>항목</th>
         <th>주기</th>
         <th>완료</th>
         <th>점검필요</th>
         <th>담당자</th>
+        <th>특이사항</th>
       </tr>
     </thead>
     <tbody id="checklist-body">
       <tr>
-        <td><select><option>1층</option><option>2층</option><option>3층</option></select></td>
-        <td><select><option>화장실</option><option>사무실</option><option>회의실</option><option>공용공간</option></select></td>
-        <td><input type="text" placeholder="예: 변기"></td>
+        <td><input type="text" placeholder="예: 1층"></td>
+        <td><input type="text" placeholder="예: 화장실"></td>
+        <td><input type="text" placeholder="예: 세면대"></td>
         <td><select><option>일간</option><option>주간</option><option>월간</option></select></td>
         <td><input type="checkbox" class="done"></td>
         <td><input type="checkbox"></td>
         <td><input type="text" class="signer"></td>
+        <td><input type="text" placeholder="특이사항"></td>
       </tr>
     </tbody>
   </table>
@@ -76,13 +78,14 @@
       const tbody = document.getElementById('checklist-body');
       const row = document.createElement('tr');
       row.innerHTML = `
-        <td><select><option>1층</option><option>2층</option><option>3층</option></select></td>
-        <td><select><option>화장실</option><option>사무실</option><option>회의실</option><option>공용공간</option></select></td>
+        <td><input type="text" placeholder="예: 1층"></td>
+        <td><input type="text" placeholder="예: 회의실"></td>
         <td><input type="text" placeholder="예: 바닥"></td>
         <td><select><option>일간</option><option>주간</option><option>월간</option></select></td>
         <td><input type="checkbox" class="done"></td>
         <td><input type="checkbox"></td>
         <td><input type="text" class="signer"></td>
+        <td><input type="text" placeholder="특이사항"></td>
       `;
       tbody.appendChild(row);
       row.querySelectorAll('.done').forEach(cb => cb.addEventListener('change', updateProgress));
@@ -104,14 +107,15 @@
       const rows = document.querySelectorAll('#checklist-body tr');
       const report = [];
       rows.forEach(row => {
-        const 층 = row.cells[0].querySelector('select')?.value || '';
-        const 구역 = row.cells[1].querySelector('select')?.value || '';
+        const 층 = row.cells[0].querySelector('input')?.value || '';
+        const 구역 = row.cells[1].querySelector('input')?.value || '';
         const 항목 = row.cells[2].querySelector('input')?.value || '';
         const 주기 = row.cells[3].querySelector('select')?.value || '';
         const 완료 = row.cells[4].querySelector('input')?.checked ? '완료' : '미완료';
         const 점검 = row.cells[5].querySelector('input')?.checked ? '점검필요' : '';
         const 담당자 = row.cells[6].querySelector('input')?.value || '';
-        report.push(`${주기} | ${층} - ${구역} - ${항목} | 상태: ${완료}${점검 ? ', ' + 점검 : ''} | 담당자: ${담당자}`);
+        const 특이사항 = row.cells[7].querySelector('input')?.value || '';
+        report.push(`${주기} | ${층} - ${구역} - ${항목} | 상태: ${완료}${점검 ? ', ' + 점검 : ''} | 담당자: ${담당자}${특이사항 ? ' | 특이사항: ' + 특이사항 : ''}`);
       });
       document.getElementById('report-output').textContent = report.join('\n');
     }
